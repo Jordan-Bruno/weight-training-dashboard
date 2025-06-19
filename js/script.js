@@ -40,7 +40,7 @@ function drawLineChart() {
     Plotly.newPlot("chart", traces, layout, { responsive: true }).then(() => {
       window.dispatchEvent(new Event("resize"));
     });
-  }, 50);
+  }, 200);
 }
 
 function populateTables() {
