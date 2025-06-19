@@ -123,4 +123,6 @@ function closeLog() {
   document.getElementById("tables-section").style.display = "block";
 }
 
-loadCSV(csvUrl);
+window.addEventListener("DOMContentLoaded", () => {
+  loadCSV(csvUrl);
+});
