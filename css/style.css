@@ -1,0 +1,104 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  background-color: #f8f9fa;
+}
+
+.header-banner {
+  background-color: #343a40;
+  color: white;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-banner h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.dashboard-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 20px;
+}
+
+#chart-container {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 60%;
+  height: auto;
+}
+
+.side-tables {
+  flex: 1 1 35%;
+  min-width: 300px;
+}
+
+#chart {
+  width: 100%;
+  height: 100%;
+}
+
+.side-tables {
+  flex: 1 1 35%;
+  min-width: 300px;
+}
+
+.side-tables table {
+  width: 100%;
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+}
+
+.side-tables th,
+.side-tables td {
+  padding: 4px;
+  text-align: left;
+}
+
+.side-tables h5 {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+#workout-log {
+  display: none;
+  font-size: 0.85rem;
+}
+
+.date-lookup-form input {
+  font-size: 0.85rem;
+}
+
+@media (max-width: 1440px) {
+  .dashboard-wrapper {
+    flex-direction: column;
+  }
+
+  #chart-container {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+  }
+
+  .side-tables {
+    width: 100%;
+    max-width: 100%;
+    padding-left: 0;
+    margin-top: 20px;
+  }
+}
