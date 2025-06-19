@@ -36,7 +36,11 @@ function drawLineChart() {
     yaxis: { title: "Weight (kg)" },
   };
 
-  Plotly.newPlot("chart", traces, layout, { responsive: true });
+  setTimeout(() => {
+    Plotly.newPlot("chart", traces, layout, { responsive: true }).then(() => {
+      window.dispatchEvent(new Event("resize"));
+    });
+  }, 50);
 }
 
 function populateTables() {
