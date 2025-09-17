@@ -3,11 +3,14 @@ let allData = [];
 const parseDate = d3.timeParse("%d/%m/%Y");
 const formatDate = d3.timeFormat("%Y-%m-%d");
 
+// Exercises to exclude
+const EXCLUDED_EXERCISES = new Set(["Barbell Row"]);
+
 function loadCSV(url) {
   d3.csv(url).then((data) => {
     data.forEach((d) => {
       d.Date = parseDate(d.Date);
-      d.WorkingWeight = +d.WorkingWeight;
+      d.WorkingWeight = +d.WorkingWeight || 0; // coerce, avoid NaN
     });
     allData = data;
     drawLineChart();
@@ -15,8 +18,14 @@ function loadCSV(url) {
   });
 }
 
+function getActiveData() {
+  // filter out removed exercises
+  return allData.filter((d) => !EXCLUDED_EXERCISES.has(d.Exercise));
+}
+
 function drawLineChart() {
-  const grouped = d3.group(allData, (d) => d.Exercise);
+  const data = getActiveData();
+  const grouped = d3.group(data, (d) => d.Exercise);
   const traces = [];
 
   grouped.forEach((values, key) => {
@@ -31,34 +40,52 @@ function drawLineChart() {
 
   const layout = {
     responsive: true,
-    margin: { t: 30, r: 20, b: 80, l: 50 },
-    xaxis: { title: "Date", tickformat: "%d/%m/%Y" },
-    yaxis: { title: "Weight (kg)" },
+    margin: {
+      t: 30,
+      r: 20,
+      b: 80,
+      l: 50
+    },
+    xaxis: {
+      title: "Date",
+      tickformat: "%d/%m/%Y"
+    },
+    yaxis: {
+      title: "Weight (kg)"
+    },
   };
 
   setTimeout(() => {
-    Plotly.newPlot("chart", traces, layout, { responsive: true }).then(() => {
+    Plotly.newPlot("chart", traces, layout, {
+      responsive: true
+    }).then(() => {
       window.dispatchEvent(new Event("resize"));
     });
   }, 200);
 }
 
 function populateTables() {
+  const data = getActiveData();
   const totalReps = new Map();
   const personalBests = new Map();
 
-  allData.forEach((d) => {
+  data.forEach((d) => {
     const reps = [+d.Reps1, +d.Reps2, +d.Reps3];
     for (let i = 1; i <= 5; i++) reps.push(+d[`WR${i}`] || 0);
-    const repSum = reps.reduce((a, b) => a + b, 0);
+    const repSum = reps.reduce((a, b) => a + (isFinite(b) ? b : 0), 0);
 
     totalReps.set(d.Exercise, (totalReps.get(d.Exercise) || 0) + repSum);
 
+    // only record PBs for positive weights
     if (
-      !personalBests.has(d.Exercise) ||
-      d.WorkingWeight > personalBests.get(d.Exercise).weight
+      d.WorkingWeight > 0 &&
+      (!personalBests.has(d.Exercise) ||
+        d.WorkingWeight > personalBests.get(d.Exercise).weight)
     ) {
-      personalBests.set(d.Exercise, { weight: d.WorkingWeight, date: d.Date });
+      personalBests.set(d.Exercise, {
+        weight: d.WorkingWeight,
+        date: d.Date
+      });
     }
   });
 
@@ -76,9 +103,7 @@ function populateTables() {
   personalBests.forEach((data, ex) => {
     pbBody.insertAdjacentHTML(
       "beforeend",
-      `<tr><td>${ex}</td><td>${
-        data.weight
-      }</td><td>${data.date.toLocaleDateString()}</td></tr>`
+      `<tr><td>${ex}</td><td>${data.weight}</td><td>${data.date.toLocaleDateString()}</td></tr>`
     );
   });
 }
@@ -86,7 +111,9 @@ function populateTables() {
 function lookupDate() {
   const selected = document.getElementById("dateLookup").value;
   if (!selected) return;
-  const filtered = allData.filter((d) => formatDate(d.Date) === selected);
+
+  // match date, then exclude removed exercises
+  const filtered = getActiveData().filter((d) => formatDate(d.Date) === selected);
 
   const log = document.getElementById("workout-log");
   const tables = document.getElementById("tables-section");
@@ -95,22 +122,22 @@ function lookupDate() {
   } else {
     log.innerHTML =
       filtered
-        .map((d) => {
-          let warmups = [];
-          for (let i = 1; i <= 5; i++) {
-            if (d[`WU${i}`] && d[`WR${i}`])
-              warmups.push(`${d[`WU${i}`]}kg x ${d[`WR${i}`]}`);
-          }
+      .map((d) => {
+        const warmups = [];
+        for (let i = 1; i <= 5; i++) {
+          if (d[`WU${i}`] && d[`WR${i}`])
+            warmups.push(`${d[`WU${i}`]}kg x ${d[`WR${i}`]}`);
+        }
 
-          const repsArray = [d.Reps1, d.Reps2, d.Reps3].filter((r) => r);
-          const reps = repsArray.join(", ");
+        const repsArray = [d.Reps1, d.Reps2, d.Reps3].filter((r) => r);
+        const reps = repsArray.join(", ");
 
-          return `<div class='mb-2'><strong>${d.Exercise}</strong><br>
+        return `<div class='mb-2'><strong>${d.Exercise}</strong><br>
           Warm-ups: ${warmups.length ? warmups.join(", ") : "None"}<br>
-          Sets: ${d.WorkingWeight}kg x ${reps}<br>
+          Sets: ${d.WorkingWeight}kg x ${reps || "0"}<br>
           Notes: ${d.Notes || "None"}</div>`;
-        })
-        .join("") +
+      })
+      .join("") +
       '<button class="btn btn-sm btn-dark mt-2" onclick="closeLog()">Close</button>';
   }
 
