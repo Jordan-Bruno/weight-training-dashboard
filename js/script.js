@@ -4,7 +4,7 @@ const parseDate = d3.timeParse("%d/%m/%Y");
 const formatDate = d3.timeFormat("%Y-%m-%d");
 
 // Exercises to exclude
-const EXCLUDED_EXERCISES = new Set(["Barbell Row"]);
+const EXCLUDED_EXERCISES = new Set(["Bent Over Row"]);
 
 function loadCSV(url) {
   d3.csv(url).then((data) => {
